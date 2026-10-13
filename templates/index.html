@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF Bulk Ban Checker | Refat Rahman</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-card: rgba(18, 24, 38, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-orange: #ff5e3a;
+            --accent-gold: #ffb703;
+            --accent-blue: #00d2ff;
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.15);
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.15);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body {
+            background-color: var(--bg-primary);
+            background-image:
+                radial-gradient(circle at 15% 20%, rgba(255, 94, 58, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(0, 210, 255, 0.12) 0%, transparent 40%);
+            min-height: 100vh; color: var(--text-main); padding: 24px 16px;
+        }
+        .container { max-width: 1100px; margin: auto; }
+        .header { text-align: center; margin-bottom: 28px; }
+        .header .badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255, 94, 58, 0.15);
+            border: 1px solid rgba(255, 94, 58, 0.3);
+            color: var(--accent-orange);
+            padding: 6px 14px; border-radius: 999px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 12px;
+        }
+        .header h1 {
+            font-family: 'Rajdhani', sans-serif; font-size: 2.4rem; font-weight: 700;
+            background: linear-gradient(135deg, #fff 30%, var(--accent-orange) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 6px; }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px; padding: 28px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            margin-bottom: 24px;
+        }
+
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab {
+            padding: 10px 18px; border-radius: 10px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted); font-weight: 600; font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: rgba(255, 94, 58, 0.2);
+            border-color: var(--accent-orange);
+            color: #fff;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 14px; padding: 40px 20px; text-align: center;
+            cursor: pointer; transition: all 0.3s; margin-bottom: 16px;
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--accent-orange);
+            background: rgba(255, 94, 58, 0.05);
+        }
+        .upload-area i { font-size: 2.5rem; color: var(--accent-orange); margin-bottom: 12px; }
+        .upload-area p { color: var(--text-muted); font-size: 0.95rem; }
+        .upload-area strong { color: var(--accent-orange); }
+        .file-info {
+            display: none; margin-top: 12px; padding: 12px 16px;
+            background: rgba(0, 210, 255, 0.1);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            border-radius: 10px; color: var(--accent-blue);
+            font-size: 0.9rem;
+        }
+
+        textarea.input-field {
+            width: 100%; min-height: 180px; resize: vertical;
+            background: rgba(11, 15, 25, 0.7);
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px; padding: 14px;
+            color: #fff; font-family: monospace; font-size: 0.9rem;
+            outline: none; transition: all 0.3s;
+        }
+        textarea.input-field:focus {
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 0 3px rgba(255, 94, 58, 0.2);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #ff5e3a, #e63946);
+            color: #fff; border: none; border-radius: 12px;
+            padding: 14px 20px; font-size: 1.05rem; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            gap: 10px; transition: all 0.3s;
+            box-shadow: 0 10px 25px rgba(255, 94, 58, 0.35);
+            margin-top: 14px;
+        }
+        .btn-submit:hover:not(:disabled) { transform: translateY(-2px); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px; margin-bottom: 24px;
+        }
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 14px; padding: 16px; text-align: center;
+        }
+        .stat-card span {
+            display: block; font-size: 0.78rem; color: var(--text-muted);
+            text-transform: uppercase; margin-bottom: 6px;
+        }
+        .stat-card strong { font-size: 1.6rem; font-weight: 700; }
+        .stat-total strong { color: #fff; }
+        .stat-banned strong { color: var(--danger); }
+        .stat-clean strong { color: var(--success); }
+        .stat-7day strong { color: var(--accent-gold); }
+        .stat-error strong { color: #f59e0b; }
+
+        .result-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .rtab {
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted); font-weight: 600; font-size: 0.85rem;
+        }
+        .rtab.active { background: rgba(255, 94, 58, 0.2); border-color: var(--accent-orange); color: #fff; }
+
+        .results-list { max-height: 500px; overflow-y: auto; padding-right: 6px; }
+        .results-list::-webkit-scrollbar { width: 8px; }
+        .results-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+        .result-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; border-radius: 10px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+            margin-bottom: 8px; gap: 12px; flex-wrap: wrap;
+        }
+        .result-row.banned { border-left: 4px solid var(--danger); }
+        .result-row.clean { border-left: 4px solid var(--success); }
+        .result-row.seven-day { border-left: 4px solid var(--accent-gold); background: rgba(255, 183, 3, 0.08); }
+        .result-row.error { border-left: 4px solid #f59e0b; }
+
+        .result-row .uid { font-family: monospace; font-weight: 600; color: #fff; }
+        .result-row .status-tag {
+            padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;
+        }
+        .status-tag.banned { background: rgba(239,68,68,0.2); color: var(--danger); }
+        .status-tag.clean { background: rgba(16,185,129,0.2); color: var(--success); }
+        .status-tag.seven { background: rgba(255,183,3,0.2); color: var(--accent-gold); }
+        .status-tag.error { background: rgba(245,158,11,0.2); color: #f59e0b; }
+
+        .download-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff; border: none; border-radius: 10px;
+            padding: 12px 20px; font-weight: 700; cursor: pointer;
+            margin-top: 16px; font-size: 0.95rem;
+        }
+        .download-btn:hover { transform: translateY(-2px); }
+
+        .spinner {
+            display: none; width: 20px; height: 20px;
+            border: 2.5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%; border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .progress-bar {
+            display: none; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1); border-radius: 3px;
+            margin-top: 14px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-gold));
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 540px) {
+            .header h1 { font-size: 1.8rem; }
+            .card { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="badge"><i class="fa-solid fa-shield-halved"></i> Bulk Ban Checker</div>
+        <h1>FF Bulk Ban Check</h1>
+        <p>Upload JSON with 1000+ UIDs and check all at once</p>
+    </div>
+
+    <div class="card">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('file', this)"><i class="fa-solid fa-file-arrow-up"></i> Upload File</div>
+            <div class="tab" onclick="switchTab('text', this)"><i class="fa-solid fa-code"></i> Paste JSON</div>
+        </div>
+
+        <!-- FILE UPLOAD -->
+        <div id="fileTab">
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <p>Drag & drop your <strong>JSON file</strong> here or <strong>click to browse</strong></p>
+                <p style="font-size:0.8rem; margin-top:8px;">Supports: [{"uid":"123"}, ...] or ["123","456", ...]</p>
+            </div>
+            <input type="file" id="fileInput" accept=".json,application/json" style="display:none" onchange="handleFile(event)">
+            <div class="file-info" id="fileInfo"></div>
+        </div>
+
+        <!-- TEXT PASTE -->
+        <div id="textTab" style="display:none;">
+            <textarea id="jsonText" class="input-field" placeholder='[
+  { "uid": "8061036982" },
+  { "uid": "8061037569" },
+  "123456789"
+]'></textarea>
+        </div>
+
+        <button class="btn-submit" id="submitBtn" onclick="runBulkCheck()">
+            <div class="spinner" id="btnSpinner"></div>
+            <span id="btnText"><i class="fa-solid fa-bolt"></i> Start Bulk Check</span>
+        </button>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="card" id="resultCard" style="display:none;">
+        <div class="stats">
+            <div class="stat-card stat-total"><span>Total</span><strong id="statTotal">0</strong></div>
+            <div class="stat-card stat-banned"><span>Banned</span><strong id="statBanned">0</strong></div>
+            <div class="stat-card stat-7day"><span>7 Days Ban</span><strong id="stat7Day">0</strong></div>
+            <div class="stat-card stat-clean"><span>Not Banned</span><strong id="statClean">0</strong></div>
+            <div class="stat-card stat-error"><span>Errors</span><strong id="statError">0</strong></div>
+        </div>
+
+        <div class="result-tabs">
+            <div class="rtab active" onclick="switchResult('banned', this)">🚫 Banned (<span id="cntBanned">0</span>)</div>
+            <div class="rtab" onclick="switchResult('seven', this)">⛔ 7 Days (<span id="cnt7Day">0</span>)</div>
+            <div class="rtab" onclick="switchResult('clean', this)">✅ Not Banned (<span id="cntClean">0</span>)</div>
+            <div class="rtab" onclick="switchResult('error', this)">⚠️ Errors (<span id="cntError">0</span>)</div>
+        </div>
+
+        <div class="results-list" id="resultsList"></div>
+
+        <button class="download-btn" onclick="downloadResults()">
+            <i class="fa-solid fa-download"></i> Download Full Result (JSON)
+        </button>
+    </div>
+</div>
+
+<script>
+let uploadedFile = null;
+let fullResult = null;
+let currentFilter = 'banned';
+
+function switchTab(tab, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('fileTab').style.display = tab === 'file' ? 'block' : 'none';
+    document.getElementById('textTab').style.display = tab === 'text' ? 'block' : 'none';
+}
+
+function handleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    uploadedFile = file;
+    document.getElementById('fileInfo').style.display = 'block';
+    document.getElementById('fileInfo').innerHTML =
+        `<i class="fa-solid fa-file-code"></i> <strong>${file.name}</strong> (${(file.size/1024).toFixed(2)} KB)`;
+}
+
+// Drag & drop
+const uploadArea = document.getElementById('uploadArea');
+['dragenter','dragover'].forEach(ev => uploadArea.addEventListener(ev, e => {
+    e.preventDefault(); uploadArea.classList.add('dragover');
+}));
+['dragleave','drop'].forEach(ev => uploadArea.addEventListener(ev, e => {
+    e.preventDefault(); uploadArea.classList.remove('dragover');
+}));
+uploadArea.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if (file) {
+        uploadedFile = file;
+        document.getElementById('fileInfo').style.display = 'block';
+        document.getElementById('fileInfo').innerHTML =
+            `<i class="fa-solid fa-file-code"></i> <strong>${file.name}</strong> (${(file.size/1024).toFixed(2)} KB)`;
+    }
+});
+
+async function runBulkCheck() {
+    const btn = document.getElementById('submitBtn');
+    const spinner = document.getElementById('btnSpinner');
+    const btnText = document.getElementById('btnText');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+
+    // Get JSON data
+    let jsonData = null;
+    const textVal = document.getElementById('jsonText').value.trim();
+
+    if (uploadedFile) {
+        jsonData = await uploadedFile.text();
+    } else if (textVal) {
+        jsonData = textVal;
+    } else {
+        alert('Please upload a JSON file or paste JSON text first.');
+        return;
+    }
+
+    try { JSON.parse(jsonData); }
+    catch (e) { alert('Invalid JSON: ' + e.message); return; }
+
+    btn.disabled = true;
+    spinner.style.display = 'block';
+    btnText.innerHTML = 'Checking...';
+    progressBar.style.display = 'block';
+    progressFill.style.width = '30%';
+
+    try {
+        const formData = new FormData();
+        formData.append('key', 'refatbd');
+        formData.append('json_data', jsonData);
+
+        progressFill.style.width = '60%';
+
+        const res = await fetch('/bulk_check', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        progressFill.style.width = '100%';
+
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+
+        fullResult = data;
+        renderResults(data);
+
+    } catch (err) {
+        alert('Request failed: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        btnText.innerHTML = '<i class="fa-solid fa-bolt"></i> Start Bulk Check';
+        setTimeout(() => { progressBar.style.display = 'none'; progressFill.style.width = '0%'; }, 800);
+    }
+}
+
+function renderResults(data) {
+    document.getElementById('resultCard').style.display = 'block';
+    document.getElementById('statTotal').textContent = data.total;
+    document.getElementById('statBanned').textContent = data.banned_count;
+    document.getElementById('stat7Day').textContent = data.seven_day_ban_count;
+    document.getElementById('statClean').textContent = data.not_banned_count;
+    document.getElementById('statError').textContent = data.error_count;
+
+    document.getElementById('cntBanned').textContent = data.banned_count;
+    document.getElementById('cnt7Day').textContent = data.seven_day_ban_count;
+    document.getElementById('cntClean').textContent = data.not_banned_count;
+    document.getElementById('cntError').textContent = data.error_count;
+
+    currentFilter = 'banned';
+    document.querySelectorAll('.rtab').forEach((t, i) => t.classList.toggle('active', i === 0));
+    renderList();
+}
+
+function switchResult(filter, el) {
+    document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    currentFilter = filter;
+    renderList();
+}
+
+function renderList() {
+    if (!fullResult) return;
+    const list = document.getElementById('resultsList');
+    list.innerHTML = '';
+
+    let items = [];
+    if (currentFilter === 'banned') items = fullResult.banned;
+    else if (currentFilter === 'seven') items = fullResult.seven_day_bans;
+    else if (currentFilter === 'clean') items = fullResult.not_banned;
+    else if (currentFilter === 'error') items = fullResult.errors;
+
+    if (!items || items.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:20px;">No results in this category.</p>';
+        return;
+    }
+
+    items.forEach(r => {
+        const row = document.createElement('div');
+        let cls = 'result-row';
+        let tagCls = '';
+        let tagText = '';
+
+        if (r.error) {
+            cls += ' error'; tagCls = 'error'; tagText = 'ERROR';
+        } else if (r.is_7_day_ban) {
+            cls += ' seven-day'; tagCls = 'seven'; tagText = '⛔ 7 DAYS BAN';
+        } else if (r.is_banned) {
+            cls += ' banned'; tagCls = 'banned'; tagText = '🚫 BANNED';
+        } else {
+            cls += ' clean'; tagCls = 'clean'; tagText = '✅ NOT BANNED';
+        }
+
+        row.className = cls;
+        row.innerHTML = `
+            <span class="uid">${r.uid || 'N/A'}</span>
+            <span class="status-tag ${tagCls}">${tagText}</span>
+            <span style="font-size:0.82rem; color:var(--text-muted);">
+                ${r.ban_period_readable ? r.ban_period_readable : (r.error ? r.error : 'No Ban')}
+            </span>
+        `;
+        list.appendChild(row);
+    });
+}
+
+async function downloadResults() {
+    if (!fullResult) return;
+    const res = await fetch('/download_result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fullResult)
+    });
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ff_ban_result_${Date.now()}.json`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
